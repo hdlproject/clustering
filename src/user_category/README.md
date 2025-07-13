@@ -17,4 +17,5 @@
 3. I am using asset_id as one of the identifier. 
    That is because I don't have asset price data to convert the amount into common currency.
    Is it correct?
-4. 
+4. Filtering features using proxy from clustering and re-cluster, repeat until it produces similar results.
+5. Get domain experts opinion on the results.
