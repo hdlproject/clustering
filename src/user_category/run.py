@@ -62,7 +62,8 @@ def run():
     kmeans.fit(kmeans.X_train)
     clusters = kmeans.predict(kmeans.X_test)
     kmeans.X_test['cluster'] = clusters
-    kmeans.plot_clusters(kmeans.X_test)
+    # kmeans.plot_clusters(kmeans.X_test)
+    score = kmeans.evaluate()
 
     params = {
         "s_alpha": s_alpha,
@@ -70,7 +71,7 @@ def run():
         "k": k,
         "variance_threshold": variance_threshold,
         "correlation_threshold": correlation_threshold,
-        "mi_threshold": mi_threshold
+        "mi_threshold": mi_threshold,
     }
 
     with mlflow.start_run():
@@ -87,4 +88,4 @@ def run():
         mlflow.set_tags(tags)
 
         mlflow.log_params(params)
-        # mlflow.log_metric("accuracy", accuracy)
+        mlflow.log_metric("score", score)

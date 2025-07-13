@@ -3,6 +3,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import mutual_info_regression, mutual_info_classif
+from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -185,3 +186,18 @@ class KMeansClustering:
         self.fields = self.identifiers + self.features
         self.X_train = self.X_train[self.fields]
         self.X_test = self.X_test[self.fields]
+
+    def evaluate(self):
+        # evaluate the clustering performance
+        clusters = self.predict(self.X_test)
+        self.X_test['cluster'] = clusters
+
+        # calculate silhouette score
+        if len(np.unique(clusters)) > 1:
+            silhouette_avg = silhouette_score(self.scaled_X_train, clusters)
+            print(f'Silhouette Score: {silhouette_avg:.3f}')
+        else:
+            silhouette_avg = 0.0
+            print('Silhouette Score: Not applicable (only one cluster)')
+
+        return silhouette_avg
