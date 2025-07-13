@@ -177,3 +177,6 @@ pyrightconfig.json
 
 .idea/
 *.csv
+
+mlruns/
+mlartifacts/

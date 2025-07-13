@@ -14,4 +14,7 @@
 
    In practice, dynamic is better for most queue prioritization or anomaly detection tasks — because you want the cluster to reflect the wallet’s latest behavior.
 2. Automatic cluster interpretation?
-   
+3. I am using asset_id as one of the identifier. 
+   That is because I don't have asset price data to convert the amount into common currency.
+   Is it correct?
+4. 
