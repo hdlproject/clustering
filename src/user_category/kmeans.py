@@ -154,31 +154,19 @@ class KMeansClustering:
         print(f"Correlation filtering - removed features: {features_to_remove}")
         print(f"Correlation filtering - remaining features: {self.features}")
 
-    def calculate_mutual_information_with_clusters(self, n_clusters=None):
-        """
-        Calculate mutual information between features and cluster labels.
-        This is the most appropriate method for clustering applications.
-        
-        Steps:
-        1. Perform clustering on the data
-        2. Use cluster labels as 'target' variables
-        3. Calculate MI between features and cluster labels
-        """
-        if n_clusters is None:
-            n_clusters = self.n_clusters
-
-        # Scale the data for clustering
+    def filter_features_by_mi_score(self, n_clusters=3, top_k=None):
+        # scale the data for clustering
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(self.X_train[self.features])
 
-        # Perform clustering
+        # perform clustering
         kmeans_temp = KMeans(n_clusters=n_clusters, random_state=42)
         cluster_labels = kmeans_temp.fit_predict(X_scaled)
 
-        # Calculate mutual information between features and cluster labels
+        # calculate mutual information between features and cluster labels
         mi_scores = mutual_info_classif(X_scaled, cluster_labels, random_state=42)
 
-        # Create results DataFrame
+        # create results DataFrame
         mi_df = pd.DataFrame({
             'feature': self.features,
             'mi_with_clusters': mi_scores
@@ -187,109 +175,11 @@ class KMeansClustering:
         print(f"Mutual Information with Cluster Labels (k={n_clusters}):")
         print(mi_df.round(3))
 
-        return mi_df, cluster_labels
-
-    def filter_features_by_cluster_mi(self, n_clusters=None, top_k=None, threshold=None):
-        """
-        Filter features based on mutual information with cluster labels.
-        This is the recommended approach for clustering applications.
-        """
-        mi_df, cluster_labels = self.calculate_mutual_information_with_clusters(n_clusters)
-
-        if threshold is not None:
-            # Keep features above threshold
-            high_mi_features = mi_df[mi_df['mi_with_clusters'] > threshold]['feature'].tolist()
-        elif top_k is not None:
-            # Keep top k features
-            high_mi_features = mi_df.head(top_k)['feature'].tolist()
-        else:
-            # Use default threshold
-            high_mi_features = mi_df[mi_df['mi_with_clusters'] > self.mi_threshold]['feature'].tolist()
-
+        high_mi_features = mi_df.head(top_k)['feature'].tolist()
         removed_features = [f for f in self.features if f not in high_mi_features]
 
         print(f"Cluster MI filtering - selected features: {high_mi_features}")
         print(f"Cluster MI filtering - removed features: {removed_features}")
-
-        self.features = high_mi_features
-        self.fields = self.identifiers + self.features
-        self.X_train = self.X_train[self.fields]
-        self.X_test = self.X_test[self.fields]
-
-        return mi_df, cluster_labels
-
-    def comprehensive_feature_selection(self):
-        """
-        Apply all feature selection methods in sequence.
-        """
-        print("=== Starting Comprehensive Feature Selection ===")
-        print(f"Initial features: {self.features}")
-
-        # Step 1: Variance filtering
-        print("\n1. Variance filtering...")
-        self.filter_features_by_variance()
-
-        # Step 2: Correlation filtering
-        print("\n2. Correlation filtering...")
-        self.filter_features_by_correlation()
-
-        # Step 3: Mutual Information with cluster labels (recommended for clustering)
-        print("\n3. Mutual Information with cluster labels...")
-        self.filter_features_by_cluster_mi(top_k=3)  # Keep top 3 features
-
-        print(f"\nFinal selected features: {self.features}")
-        print(f"Final dataset shape: {self.X_train.shape}")
-
-    def calculate_mutual_information(self, target_feature=None):
-        """
-        Calculate mutual information between features.
-        For clustering, we can use one feature as a 'target' to measure MI with others.
-        """
-        if target_feature is None:
-            # Use the first feature as target for demonstration
-            target_feature = self.features[0]
-
-        # Prepare data: use one feature as target, others as features
-        feature_cols = [f for f in self.features if f != target_feature]
-        X = self.X_train[feature_cols]
-        y = self.X_train[target_feature]
-
-        # Calculate mutual information
-        mi_scores = mutual_info_regression(X, y, random_state=42)
-
-        # Create a DataFrame with feature names and MI scores
-        mi_df = pd.DataFrame({
-            'feature': feature_cols,
-            'mutual_info': mi_scores
-        }).sort_values('mutual_info', ascending=False)
-
-        print(f"Mutual Information scores (using {target_feature} as target):")
-        print(mi_df)
-
-        return mi_df
-
-    def filter_features_by_mutual_information(self, target_feature=None, top_k=None):
-        """
-        Filter features based on mutual information scores.
-        Keep top_k features with highest MI scores.
-        """
-        mi_df = self.calculate_mutual_information(target_feature)
-
-        if top_k is None:
-            # Keep features above threshold
-            high_mi_features = mi_df[mi_df['mutual_info'] > self.mi_threshold]['feature'].tolist()
-        else:
-            # Keep top k features
-            high_mi_features = mi_df.head(top_k)['feature'].tolist()
-
-        # Always include the target feature if it was used
-        if target_feature and target_feature not in high_mi_features:
-            high_mi_features.append(target_feature)
-
-        removed_features = [f for f in self.features if f not in high_mi_features]
-
-        print(f"MI filtering - selected features: {high_mi_features}")
-        print(f"MI filtering - removed features: {removed_features}")
 
         self.features = high_mi_features
         self.fields = self.identifiers + self.features
